@@ -1,6 +1,6 @@
 {
-  "name": "ecsjs",
-  "version": "1.0.0",
+  "name": "@zcarde/ecsjs",
+  "version": "0.0.1",
   "description": "Entity component system patern",
   "main": "src/index.js",
   "type": "module",
