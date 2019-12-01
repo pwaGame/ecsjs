@@ -8,9 +8,56 @@ module.exports = class EntityStore {
     }
 
     constructor() {
+        this.systems = [];
         this.entityMap = {};
         this.entityByComponentNameMap = {};
         this.entityByComponentsNameMap = {};
+
+        this.lastTime = 0;
+        this.firstTime = 0;
+    }
+
+    init(time) {
+        this.lastTime = time;
+        this.firstTime = time;
+        this.now = time;
+        this.dt = 0;
+        this.updateTime = 0;
+    }
+
+    registerSystem(system) {
+        this.systems.push(system);
+    }
+
+    update(first) {
+        if (first) {
+            this.lastTime = Date.now();
+            this.firstTime = Date.now();
+            this.now = Date.now();
+            this.dt = 0;
+            this.updateTime = 0;
+            this.ticks = 0;
+            return;
+        }
+        this.ticks++;
+        this.now = Date.now();
+        this.dt = this.now - this.lastTime;
+        this.systems.forEach((system) => {
+            let entitiesIds = this.getEntitiesByComponents(system.components);
+            entitiesIds.forEach((id) => {
+                let entity = this.getEntityById(id);
+                system.update(this.dt, entity);
+            });
+        });
+        this.__resetUpdatedFlag();
+        this.updateTime = Date.now() - this.now;
+        this.lastTime = this.now;
+    }
+
+    __resetUpdatedFlag() {
+        Object.keys(this.entityMap).forEach((id) => {
+            this.entityMap[id].updated = false;
+        });
     }
 
     registerEntity(entity) {
@@ -61,30 +108,23 @@ module.exports = class EntityStore {
         });
     }
 
-    getEntitiesByComponents(components) {
-        if (components instanceof Array) {
-            let str;
-            components.forEach((component) => {
-                if (!str) {
-                    str = component;
-                } else {
-                    str += '&' + component;
-                }
-            });
+    getEntitiesByComponents(...components) {
+        let str;
+        components.forEach((component) => {
             if (!str) {
-                return [];
+                str = component;
+            } else {
+                str += '&' + component;
             }
-            return this.entityByComponentsNameMap[str] || [];
+        });
+        if (!str) {
+            return Object.keys(this.entityMap);
         } else {
-            return this.getEntitiesByComponent(components);
+            return this.entityByComponentsNameMap[str] || [];
         }
     }
 
-    getEntitiesByComponent(component) {
-        return this.entityByComponentNameMap[component];
-    }
-
-    getEntitiesById(id) {
+    getEntityById(id) {
         return this.entityMap[id];
     }
 };

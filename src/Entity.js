@@ -24,10 +24,10 @@ module.exports = class Entity {
     constructor() {
     }
 
-    registerComponent(name, declaration) {
+    registerComponent(name, values) {
         this[name] = {};
-        Object.keys(declaration).forEach((key) => {
-            this[name][key] = declaration[key];
+        Object.keys(values).forEach((key) => {
+            this[name][key] = values[key];
         });
     }
 
